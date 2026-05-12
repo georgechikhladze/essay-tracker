@@ -4,6 +4,7 @@ import { existsSync, writeFileSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -12,6 +13,52 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const DATA_FILE = join(__dirname, 'data.json');
 const CREDENTIALS_FILE = join(__dirname, 'credentials.json');
+
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+
+// Function to check essay for errors using Gemini
+async function checkEssayForErrors(essayText) {
+  if (!process.env.GEMINI_API_KEY) {
+    throw new Error('GEMINI_API_KEY not configured');
+  }
+
+  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  
+  const prompt = `Analyze the following English essay for common errors and provide examples of each type of error found. Focus on these categories: articles, grammar, stylistic, vocabulary, punctuation, spelling, prepositions, word order, and tenses.
+
+Essay:
+"""
+${essayText}
+"""
+
+Respond in JSON format with the following structure:
+{
+  "articles": ["example1", "example2"],
+  "grammar": ["example1"],
+  "stylistic": [],
+  "vocabulary": ["example1"],
+  "punctuation": [],
+  "spelling": [],
+  "prepositions": ["example1"],
+  "wordOrder": [],
+  "tenses": ["example1"]
+}
+
+Only include actual errors found in the essay. Keep examples concise and clear.`;
+
+  const result = await model.generateContent(prompt);
+  const responseText = result.response.text();
+  
+  // Extract JSON from response
+  const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('Invalid Gemini response format');
+  }
+  
+  const errors = JSON.parse(jsonMatch[0]);
+  return errors;
+}
 
 app.use(cors());
 app.use(json());
@@ -181,6 +228,26 @@ app.delete('/api/essays/:id', authMiddleware, adminOnly, (req, res) => {
   }
   writeData(filtered);
   res.status(204).end();
+});
+
+// POST /api/check-essay — проверить эссе на ошибки используя Gemini
+app.post('/api/check-essay', authMiddleware, async (req, res) => {
+  try {
+    const { text } = req.body;
+    
+    if (!text || text.trim().length === 0) {
+      return res.status(400).json({ error: 'Essay text is required' });
+    }
+    
+    console.log('🔍 Checking essay with Gemini...');
+    const errors = await checkEssayForErrors(text);
+    console.log('✅ Essay checked successfully');
+    
+    res.json({ errors });
+  } catch (err) {
+    console.error('❌ Error checking essay:', err.message);
+    res.status(500).json({ error: err.message || 'Failed to check essay' });
+  }
 });
 
 // SPA fallback — для всех остальных маршрутов отдаём index.html

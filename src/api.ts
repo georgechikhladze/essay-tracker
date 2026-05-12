@@ -175,4 +175,24 @@ export const api = {
     const essays = readLocal().filter((e) => e.id !== id);
     writeLocal(essays);
   },
+
+  // Проверить эссе на ошибки используя Gemini
+  async checkEssay(text: string): Promise<Record<string, string[]>> {
+    const res = await fetch('/api/check-essay', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+      },
+      body: JSON.stringify({ text }),
+    });
+    
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || 'Failed to check essay');
+    }
+    
+    const data = await res.json();
+    return data.errors;
+  },
 };
