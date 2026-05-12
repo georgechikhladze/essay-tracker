@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, GraduationCap, Search, Loader2, WifiOff, Wifi, RefreshCw, BarChart3, List } from 'lucide-react';
+import { Plus, GraduationCap, Search, Loader2, WifiOff, Wifi, RefreshCw, BarChart3, List, LogOut } from 'lucide-react';
 import { type Essay } from './types';
 import { api } from './api';
 import EssayTable from './components/EssayTable';
@@ -7,6 +7,7 @@ import AddEssayModal from './components/AddEssayModal';
 import EssayViewModal from './components/EssayViewModal';
 import StatsBar from './components/StatsBar';
 import ErrorsChart from './components/ErrorsChart';
+import LoginModal from './components/LoginModal';
 
 export default function App() {
   const [essays, setEssays] = useState<Essay[]>([]);
@@ -18,6 +19,9 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'essays' | 'stats'>('essays');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const loadEssays = useCallback(async () => {
     setLoading(true);
@@ -26,7 +30,7 @@ export default function App() {
       setEssays(data);
       // Проверяем, работает ли сервер
       try {
-        const res = await fetch('/api/essays', { signal: AbortSignal.timeout(1000) });
+        const res = await fetch('/api/essays', { signal: AbortSignal.timeout(1000), headers: { 'Authorization': `Bearer ${localStorage.getItem('auth-token') || ''}` } });
         setServerOnline(res.ok);
       } catch {
         setServerOnline(false);
@@ -38,9 +42,42 @@ export default function App() {
     }
   }, []);
 
+  // Verify token on mount
   useEffect(() => {
-    loadEssays();
+    const verifyToken = async () => {
+      const isValid = await api.verify();
+      if (isValid) {
+        setIsAuthenticated(true);
+        await loadEssays();
+      } else {
+        api.logout();
+        setIsAuthenticated(false);
+        setLoading(false);
+      }
+    };
+    verifyToken();
   }, [loadEssays]);
+
+  const handleLogin = async (username: string, password: string) => {
+    setIsLoggingIn(true);
+    setLoginError(null);
+    try {
+      await api.login(username, password);
+      setIsAuthenticated(true);
+      await loadEssays();
+    } catch (err) {
+      setLoginError(err instanceof Error ? err.message : 'Ошибка входа');
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = () => {
+    api.logout();
+    setIsAuthenticated(false);
+    setEssays([]);
+  };
 
   const filteredEssays = essays.filter(
     (essay) =>
@@ -97,6 +134,10 @@ export default function App() {
         </div>
       </div>
     );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginModal onLogin={handleLogin} isLoading={isLoggingIn} error={loginError} />;
   }
 
   return (
@@ -158,6 +199,13 @@ export default function App() {
             >
               <Plus className="h-4 w-4" />
               Добавить эссе
+            </button>
+            <button
+              onClick={handleLogout}
+              className="rounded-xl p-2.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+              title="Выйти из аккаунта"
+            >
+              <LogOut className="h-4 w-4" />
             </button>
           </div>
         </div>
