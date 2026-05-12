@@ -22,3 +22,10 @@ export interface Essay {
   date: string;
   errors: EssayError[];
 }
+
+export type UserRole = 'admin' | 'user';
+
+export interface UserProfile {
+  username: string;
+  role: UserRole;
+}

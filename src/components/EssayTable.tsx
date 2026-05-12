@@ -1,18 +1,19 @@
 import { useState } from 'react';
 import { Eye, Pencil, Trash2, ChevronDown, ChevronUp, ArrowUpDown } from 'lucide-react';
-import { ERROR_TYPES, type Essay } from '../types';
+import { ERROR_TYPES, type Essay, type UserRole } from '../types';
 
 interface EssayTableProps {
   essays: Essay[];
   onView: (essay: Essay) => void;
   onEdit: (essay: Essay) => void;
   onDelete: (id: string) => void;
+  userRole?: UserRole;
 }
 
 type SortField = 'date' | 'topic' | 'totalErrors' | string;
 type SortDir = 'asc' | 'desc';
 
-export default function EssayTable({ essays, onView, onEdit, onDelete }: EssayTableProps) {
+export default function EssayTable({ essays, onView, onEdit, onDelete, userRole = 'user' }: EssayTableProps) {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [hoveredCell, setHoveredCell] = useState<{ essayId: string; errorType: string } | null>(null);
@@ -243,20 +244,24 @@ export default function EssayTable({ essays, onView, onEdit, onDelete }: EssayTa
                     >
                       <Eye className="h-4 w-4" />
                     </button>
-                    <button
-                      onClick={() => onEdit(essay)}
-                      className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-600"
-                      title="Редактировать"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => onDelete(essay.id)}
-                      className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                      title="Удалить"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {userRole === 'admin' && (
+                      <>
+                        <button
+                          onClick={() => onEdit(essay)}
+                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-amber-50 hover:text-amber-600"
+                          title="Редактировать"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(essay.id)}
+                          className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                          title="Удалить"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>

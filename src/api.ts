@@ -1,9 +1,10 @@
-import { type Essay } from './types';
+import { type Essay, type UserRole } from './types';
 
 const API_URL = '/api/essays';
 const AUTH_URL = '/api/auth';
 const LS_KEY = 'english-essays-fallback';
 const TOKEN_KEY = 'auth-token';
+const ROLE_KEY = 'user-role';
 
 // Get authorization header
 function getAuthHeader(): Record<string, string> {
@@ -42,7 +43,7 @@ function writeLocal(essays: Essay[]): void {
 
 export const api = {
   // Login
-  async login(username: string, password: string): Promise<{ token: string; username: string }> {
+  async login(username: string, password: string): Promise<{ token: string; username: string; role: UserRole }> {
     const res = await fetch(`${AUTH_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -56,13 +57,19 @@ export const api = {
     
     const data = await res.json();
     localStorage.setItem(TOKEN_KEY, data.token);
+    localStorage.setItem(ROLE_KEY, data.role || 'user');
     return data;
   },
 
+  // Get user role
+  getRole(): UserRole {
+    return (localStorage.getItem(ROLE_KEY) as UserRole) || 'user';
+  },
+
   // Verify token
-  async verify(): Promise<boolean> {
+  async verify(): Promise<{ valid: boolean; role?: UserRole }> {
     const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return false;
+    if (!token) return { valid: false };
     
     try {
       const res = await fetch(`${AUTH_URL}/verify`, {
@@ -72,15 +79,24 @@ export const api = {
           ...getAuthHeader(),
         },
       });
-      return res.ok;
+      
+      if (!res.ok) return { valid: false };
+      
+      const data = await res.json();
+      if (data.valid && data.role) {
+        localStorage.setItem(ROLE_KEY, data.role);
+        return { valid: true, role: data.role };
+      }
+      return { valid: res.ok, role: data.role };
     } catch {
-      return false;
+      return { valid: false };
     }
   },
 
   // Logout
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(ROLE_KEY);
   },
 
   // Получить все эссе

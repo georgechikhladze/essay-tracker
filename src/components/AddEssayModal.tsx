@@ -66,8 +66,10 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
     }));
   };
 
+  const isTextValid = text.length >= 100 && text.length <= 150;
+
   const handleSave = () => {
-    if (!topic.trim() || !text.trim()) return;
+    if (!topic.trim() || !text.trim() || !isTextValid) return;
 
     const essayErrors: EssayError[] = ERROR_TYPES.map(({ key }) => ({
       type: key,
@@ -135,11 +137,44 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
               onChange={(e) => setText(e.target.value)}
               placeholder="Вставьте полный текст вашего эссе..."
               rows={8}
-              className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm text-slate-800 placeholder-slate-400 transition-all focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              className={`w-full resize-y rounded-xl border px-4 py-3 font-mono text-sm text-slate-800 placeholder-slate-400 transition-all focus:outline-none focus:ring-2 ${
+                text.length === 0
+                  ? 'border-slate-300 focus:border-indigo-400 focus:ring-indigo-100'
+                  : text.length < 100
+                  ? 'border-orange-300 focus:border-orange-400 focus:ring-orange-100'
+                  : text.length <= 150
+                  ? 'border-green-300 focus:border-green-400 focus:ring-green-100'
+                  : 'border-red-300 focus:border-red-400 focus:ring-red-100'
+              }`}
             />
-            <p className="mt-1 text-xs text-slate-400">
-              {text.length} символов · {text.split(/\s+/).filter(Boolean).length} слов
-            </p>
+            <div className="mt-2 flex items-center justify-between">
+              <p className={`text-xs ${
+                text.length === 0
+                  ? 'text-slate-400'
+                  : text.length < 100
+                  ? 'text-orange-600 font-medium'
+                  : text.length <= 150
+                  ? 'text-green-600 font-medium'
+                  : 'text-red-600 font-medium'
+              }`}>
+                {text.length} / 150 символов · {text.split(/\s+/).filter(Boolean).length} слов
+              </p>
+              {text.length > 0 && text.length < 100 && (
+                <p className="text-xs text-orange-600 font-medium">
+                  Минимум 100 символов ({100 - text.length} осталось)
+                </p>
+              )}
+              {text.length > 150 && (
+                <p className="text-xs text-red-600 font-medium">
+                  Максимум 150 символов ({text.length - 150} лишних)
+                </p>
+              )}
+              {text.length >= 100 && text.length <= 150 && (
+                <p className="text-xs text-green-600 font-medium">
+                  ✓ Валидно
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Errors section */}
@@ -215,7 +250,7 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
           </button>
           <button
             onClick={handleSave}
-            disabled={!topic.trim() || !text.trim()}
+            disabled={!topic.trim() || !text.trim() || !isTextValid}
             className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-all hover:shadow-xl hover:shadow-indigo-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
           >
             {editEssay ? 'Сохранить' : 'Добавить эссе'}
