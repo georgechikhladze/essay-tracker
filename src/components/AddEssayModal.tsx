@@ -12,15 +12,14 @@ interface AddEssayModalProps {
 export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: AddEssayModalProps) {
   const [topic, setTopic] = useState('');
   const [text, setText] = useState('');
+  const [correctedText, setCorrectedText] = useState('');
   const [errors, setErrors] = useState<Record<ErrorTypeKey, string[]>>({
     articles: [''],
     grammar: [''],
-    stylistic: [''],
     vocabulary: [''],
     punctuation: [''],
     spelling: [''],
     prepositions: [''],
-    wordOrder: [''],
     tenses: [''],
   });
 
@@ -28,9 +27,10 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
     if (editEssay) {
       setTopic(editEssay.topic);
       setText(editEssay.text);
+      setCorrectedText(editEssay.correctedText || '');
       const errorMap: Record<ErrorTypeKey, string[]> = {
-        articles: [''], grammar: [''], stylistic: [''], vocabulary: [''],
-        punctuation: [''], spelling: [''], prepositions: [''], wordOrder: [''], tenses: [''],
+        articles: [''], grammar: [''], vocabulary: [''],
+        punctuation: [''], spelling: [''], prepositions: [''], tenses: [''],
       };
       editEssay.errors.forEach((err) => {
         errorMap[err.type] = err.examples.length > 0 ? [...err.examples] : [''];
@@ -39,9 +39,10 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
     } else {
       setTopic('');
       setText('');
+      setCorrectedText('');
       setErrors({
-        articles: [''], grammar: [''], stylistic: [''], vocabulary: [''],
-        punctuation: [''], spelling: [''], prepositions: [''], wordOrder: [''], tenses: [''],
+        articles: [''], grammar: [''], vocabulary: [''],
+        punctuation: [''], spelling: [''], prepositions: [''], tenses: [''],
       });
     }
   }, [editEssay, isOpen]);
@@ -66,8 +67,11 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
     }));
   };
 
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+  const isTextValid = wordCount >= 100 && wordCount <= 180;
+
   const handleSave = () => {
-    if (!topic.trim() || !text.trim()) return;
+    if (!topic.trim() || !text.trim() || !isTextValid) return;
 
     const essayErrors: EssayError[] = ERROR_TYPES.map(({ key }) => ({
       type: key,
@@ -77,6 +81,7 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
     onSave({
       topic: topic.trim(),
       text: text.trim(),
+      correctedText: correctedText.trim() || undefined,
       date: editEssay ? editEssay.date : new Date().toISOString(),
       errors: essayErrors,
     });
@@ -89,10 +94,10 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm">
-      <div className="my-8 w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 px-4 backdrop-blur-sm">
+      <div className="my-8 w-full rounded-2xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-6 py-4">
+        <div className="top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600">
               <FileText className="h-5 w-5 text-white" />
@@ -103,8 +108,7 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
-          >
+            className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -125,21 +129,73 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
             />
           </div>
 
-          {/* Essay text */}
-          <div>
-            <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+          <div className="flex items-center gap-3">
+            {/* Essay text */}
+            <div className="flex-1">
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
               Текст эссе <span className="text-red-400">*</span>
-            </label>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Вставьте полный текст вашего эссе..."
-              rows={8}
-              className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm text-slate-800 placeholder-slate-400 transition-all focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
-            />
-            <p className="mt-1 text-xs text-slate-400">
-              {text.length} символов · {text.split(/\s+/).filter(Boolean).length} слов
-            </p>
+              </label>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Вставьте полный текст вашего эссе..."
+                rows={12}
+                className={`w-full resize-y rounded-xl border px-4 py-3 font-mono text-sm text-slate-800 placeholder-slate-400 transition-all focus:outline-none focus:ring-2 ${
+                  wordCount === 0
+                    ? 'border-slate-300 focus:border-indigo-400 focus:ring-indigo-100'
+                    : wordCount < 100
+                      ? 'border-orange-300 focus:border-orange-400 focus:ring-orange-100'
+                      : wordCount <= 180
+                        ? 'border-green-300 focus:border-green-400 focus:ring-green-100'
+                        : 'border-red-300 focus:border-red-400 focus:ring-red-100'
+                }`}
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <p className={`text-xs ${
+                  wordCount === 0
+                    ? 'text-slate-400'
+                    : wordCount < 100
+                      ? 'text-orange-600 font-medium'
+                      : wordCount <= 180
+                        ? 'text-green-600 font-medium'
+                        : 'text-red-600 font-medium'
+                }`}>
+                  {text.length} символов · {wordCount} / 180 слов
+                </p>
+                {wordCount > 0 && wordCount < 100 && (
+                  <p className="text-xs text-orange-600 font-medium">
+                    Минимум 100 слов ({100 - wordCount} осталось)
+                  </p>
+                )}
+                {wordCount > 180 && (
+                  <p className="text-xs text-red-600 font-medium">
+                    Максимум 180 слов ({wordCount - 180} лишних)
+                  </p>
+                )}
+                {wordCount >= 100 && wordCount <= 180 && (
+                  <p className="text-xs text-green-600 font-medium">
+                    ✓ Валидно
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Corrected text */}
+            <div className="flex-1 ml-4">
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                Исправленный текст
+              </label>
+              <textarea
+                value={correctedText}
+                onChange={(e) => setCorrectedText(e.target.value)}
+                placeholder="Вставьте исправленный текст эссе (опционально)..."
+                rows={12}
+                className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 font-mono text-sm text-slate-800 placeholder-slate-400 transition-all focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
+              />
+              <p className="mt-1 text-xs text-slate-400">
+                {correctedText.length} символов · {correctedText.split(/\s+/).filter(Boolean).length} слов
+              </p>
+            </div>
           </div>
 
           {/* Errors section */}
@@ -215,7 +271,7 @@ export default function AddEssayModal({ isOpen, onClose, onSave, editEssay }: Ad
           </button>
           <button
             onClick={handleSave}
-            disabled={!topic.trim() || !text.trim()}
+            disabled={!topic.trim() || !text.trim() || !isTextValid}
             className="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-all hover:shadow-xl hover:shadow-indigo-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
           >
             {editEssay ? 'Сохранить' : 'Добавить эссе'}

@@ -13,9 +13,9 @@ export default function EssayViewModal({ essay, onClose }: EssayViewModalProps) 
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm">
-      <div className="my-8 w-full max-w-3xl rounded-2xl bg-white shadow-2xl">
+      <div className="my-8 w-full rounded-2xl bg-white shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-6 py-4">
+        <div className="top-0 z-10 flex items-center justify-between rounded-t-2xl border-b border-slate-200 bg-white px-6 py-4">
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-bold text-slate-800">{essay.topic}</h2>
             <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
@@ -42,15 +42,29 @@ export default function EssayViewModal({ essay, onClose }: EssayViewModalProps) 
         </div>
 
         {/* Body */}
-        <div className="p-6">
-          {/* Essay text */}
-          <div className="mb-6">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
-              Текст эссе
-            </h3>
-            <div className="whitespace-pre-wrap rounded-xl bg-slate-50 p-5 font-mono text-sm leading-relaxed text-slate-700">
-              {essay.text}
+        <div className="p-6"> 
+          <div className="mb-6 flex items-center gap-4">
+            {/* Essay text */}
+            <div className="flex-1">
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                Текст эссе
+              </h3>
+              <div className="whitespace-pre-wrap rounded-xl bg-slate-50 p-5 font-mono text-sm leading-relaxed text-slate-700">
+                {essay.text}
+              </div>
             </div>
+
+            {/* Corrected text */}
+            {essay.correctedText && (
+              <div className="flex-1 ml-4">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-400">
+                  Исправленный текст
+                </h3>
+                <div className="whitespace-pre-wrap rounded-xl bg-green-50 p-5 font-mono text-sm leading-relaxed text-green-800">
+                  {essay.correctedText}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Errors */}

@@ -38,10 +38,19 @@ function authMiddleware(req, res, next) {
     }
     
     req.user = username;
+    req.role = user.role || 'user';
     next();
   } catch {
     return res.status(401).json({ error: 'Invalid token' });
   }
+}
+
+// Authorization middleware - checks if user is admin
+function adminOnly(req, res, next) {
+  if (req.role !== 'admin') {
+    return res.status(403).json({ error: 'Forbidden - admin access required' });
+  }
+  next();
 }
 
 // Helper: read credentials from JSON file
@@ -57,17 +66,16 @@ function readCredentials() {
   }
 }
 
-// Serve static files from dist/ (protected by auth)
-app.use((req, res, next) => {
-  // Allow auth endpoints without authentication
-  if (req.path.startsWith('/api/auth/')) {
+app.use(staticMiddleware(join(__dirname, 'dist')));
+
+// Protect only API endpoints (except auth)
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/auth/')) {
     return next();
   }
-  // Require auth for everything else
+
   authMiddleware(req, res, next);
 });
-
-app.use(staticMiddleware(join(__dirname, 'dist')));
 
 // Auth endpoints (no authentication required)
 app.post('/api/auth/login', (req, res) => {
@@ -86,8 +94,8 @@ app.post('/api/auth/login', (req, res) => {
   
   // Generate token: base64(username:password)
   const token = Buffer.from(`${username}:${password}`).toString('base64');
-  console.log(`✅ User "${username}" logged in`);
-  res.json({ token, username });
+  console.log(`✅ User "${username}" (role: ${user.role || 'user'}) logged in`);
+  res.json({ token, username, role: user.role || 'user' });
 });
 
 app.post('/api/auth/verify', (req, res) => {
@@ -107,7 +115,7 @@ app.post('/api/auth/verify', (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
     
-    res.json({ valid: true, username });
+    res.json({ valid: true, username, role: user.role || 'user' });
   } catch {
     res.status(401).json({ error: 'Invalid token' });
   }
@@ -139,8 +147,8 @@ app.get('/api/essays', authMiddleware, (req, res) => {
   res.json(essays);
 });
 
-// POST /api/essays — добавить эссе
-app.post('/api/essays', authMiddleware, (req, res) => {
+// POST /api/essays — добавить эссе (admin only)
+app.post('/api/essays', authMiddleware, adminOnly, (req, res) => {
   console.log('📝 POST /api/essays:', req.body);
   const essays = readData();
   const newEssay = req.body;
@@ -153,8 +161,8 @@ app.post('/api/essays', authMiddleware, (req, res) => {
   res.status(201).json(newEssay);
 });
 
-// PUT /api/essays/:id — обновить эссе
-app.put('/api/essays/:id', authMiddleware, (req, res) => {
+// PUT /api/essays/:id — обновить эссе (admin only)
+app.put('/api/essays/:id', authMiddleware, adminOnly, (req, res) => {
   const essays = readData();
   const idx = essays.findIndex((e) => e.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
@@ -163,8 +171,8 @@ app.put('/api/essays/:id', authMiddleware, (req, res) => {
   res.json(essays[idx]);
 });
 
-// DELETE /api/essays/:id — удалить эссе
-app.delete('/api/essays/:id', authMiddleware, (req, res) => {
+// DELETE /api/essays/:id — удалить эссе (admin only)
+app.delete('/api/essays/:id', authMiddleware, adminOnly, (req, res) => {
   const essays = readData();
   const filtered = essays.filter((e) => e.id !== req.params.id);
   if (filtered.length === essays.length) {

@@ -1,16 +1,69 @@
 [
   {
-    "topic": "Test Essay",
-    "text": "This is a test essay to check if data is saved to data.json file properly.",
+    "topic": "Should schools ban or embrace AI tools like ChatGPT for homework?",
+    "text": "It's very ongoing topic, because now practically every person touches these technologies every single day. Sometimes even don't notice it, that means the AI has come into our lives really smoothly. Not only our life has been changing for last years, but also the way how people get, extract and process information. Especially, it comes to children's education. AI has already changed the way how kids prepare their homework, learn new topics, and get any information they want in just a couple of clicks. I wish I had some of these tools when I was studying at school or preparing to the exam at University. Needless to say, that it could change a lot. However, I can't help saying that in many cases these fast-thinking tools, having any answers for any questions, can disrupt our ability to think, to find information, to put our effort in order to force our neurons thinking. Unfortunately, there is only one way for us to adapt to these changes, as humanity has done this all the time.",
     "date": "2026-05-11T13:42:47.564Z",
-    "errors": [],
-    "id": "mp194mxpdyokqj"
-  },
-  {
-    "topic": "Тест 2",
-    "text": "ук цук уцк цу куцк",
-    "date": "2026-05-11T15:29:36.231Z",
-    "errors": [],
-    "id": "mp1cxzxm3wsxb9"
+    "errors": [
+      {
+        "type": "articles",
+        "examples": [
+          "...very ongoing topic... ➡️ ...a very popular topic...",
+          "...preparing to the exam... ➡️ ...preparing for exams..."
+        ]
+      },
+      {
+        "type": "grammar",
+        "examples": [
+          "Sometimes even don't notice... ➡️ Sometimes they even don't notice it..",
+          "...that means... ➡️ ...which means...",
+          "Not only our life has been changing... ➡️ Not only has our life been changing...",
+          "...force our neurons thinking. ➡️ ...make our neurons think.",
+          "...the way how people get... ➡️ ...the way people get..."
+        ]
+      },
+      {
+        "type": "vocabulary",
+        "examples": [
+          "...ongoing topic ... ➡️ ...popular topic ...",
+          "...everyone touches ... ➡️ ...everyone uses...",
+          "...fast-thinking tools... ➡️ ...fast tools...",
+          "...put our effort... ➡️ ...put effort...",
+          "...all the time. ➡️ ...always.",
+          "...answers for any questions... ➡️ ...answers to any question...",
+          "...force our neurons thinking. ➡️ ...make our neurons think."
+        ]
+      },
+      {
+        "type": "punctuation",
+        "examples": [
+          "...get, extract and process... ➡️ ...get, extract, and process...",
+          "...topic because now... ➡️ ...topic, because now..."
+        ]
+      },
+      {
+        "type": "spelling",
+        "examples": [
+          "...at University. ➡️ ...at university."
+        ]
+      },
+      {
+        "type": "prepositions",
+        "examples": [
+          "...preparing to the exam... ➡️ ...preparing for exams...",
+          "...answers for any questions... ➡️ ...answers to any question...",
+          "...put our effort in order to... ➡️ ...put effort into..."
+        ]
+      },
+      {
+        "type": "tenses",
+        "examples": [
+          "...for last years... ➡️ ...over the last few years...",
+          "...it could change a lot. ➡️ ...this could have changed a lot.",
+          "...as humanity has done this all the time. ➡️ ...as humanity has always done."
+        ]
+      }
+    ],
+    "id": "mp194mxpdyokqj",
+    "correctedText": "It's a very popular topic because now practically everyone uses these technologies every single day. Sometimes they even don't notice it, which means that AI has come into our lives really smoothly. Not only has our life been changing over the last few years, but also the way that people get, extract**,** and process information. Especially, it comes to children's education. AI has already changed the way that kids prepare their homework, learn new topics**,** and get information they want in just a couple of clicks. I wish I had known about some of these tools when I was studying at school or preparing for exams at university. Needless to say, this could have changed a lot. However, I can't help saying that in many cases these fast tools, having the answers to any question, can disrupt our ability to think, to find information**,** and to put effort into making our neurons think. Unfortunately, there is only one way for us to adapt to these changes, as humanity has always done."
   }
 ]

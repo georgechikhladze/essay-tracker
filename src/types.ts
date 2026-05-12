@@ -19,6 +19,14 @@ export interface Essay {
   id: string;
   topic: string;
   text: string;
+  correctedText?: string;
   date: string;
   errors: EssayError[];
+}
+
+export type UserRole = 'admin' | 'user';
+
+export interface UserProfile {
+  username: string;
+  role: UserRole;
 }

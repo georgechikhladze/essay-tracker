@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, GraduationCap, Search, Loader2, WifiOff, Wifi, RefreshCw, BarChart3, List, LogOut } from 'lucide-react';
-import { type Essay } from './types';
+import { type Essay, type UserRole } from './types';
 import { api } from './api';
 import EssayTable from './components/EssayTable';
 import AddEssayModal from './components/AddEssayModal';
@@ -22,6 +22,7 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>('user');
 
   const loadEssays = useCallback(async () => {
     setLoading(true);
@@ -45,9 +46,10 @@ export default function App() {
   // Verify token on mount
   useEffect(() => {
     const verifyToken = async () => {
-      const isValid = await api.verify();
-      if (isValid) {
+      const result = await api.verify();
+      if (result.valid) {
         setIsAuthenticated(true);
+        if (result.role) setUserRole(result.role);
         await loadEssays();
       } else {
         api.logout();
@@ -62,7 +64,8 @@ export default function App() {
     setIsLoggingIn(true);
     setLoginError(null);
     try {
-      await api.login(username, password);
+      const result = await api.login(username, password);
+      setUserRole(result.role || 'user');
       setIsAuthenticated(true);
       await loadEssays();
     } catch (err) {
@@ -76,6 +79,7 @@ export default function App() {
   const handleLogout = () => {
     api.logout();
     setIsAuthenticated(false);
+    setUserRole('user');
     setEssays([]);
   };
 
@@ -190,16 +194,18 @@ export default function App() {
             >
               <RefreshCw className="h-4 w-4" />
             </button>
-            <button
-              onClick={() => {
-                setEditingEssay(null);
-                setIsAddModalOpen(true);
-              }}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-all hover:shadow-xl hover:shadow-indigo-300 active:scale-95"
-            >
-              <Plus className="h-4 w-4" />
-              Добавить эссе
-            </button>
+            {userRole === 'admin' && (
+              <button
+                onClick={() => {
+                  setEditingEssay(null);
+                  setIsAddModalOpen(true);
+                }}
+                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-200 transition-all hover:shadow-xl hover:shadow-indigo-300 active:scale-95"
+              >
+                <Plus className="h-4 w-4" />
+                Добавить эссе
+              </button>
+            )}
             <button
               onClick={handleLogout}
               className="rounded-xl p-2.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
@@ -298,6 +304,7 @@ export default function App() {
               onView={setViewingEssay}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              userRole={userRole}
             />
           </>
         )}
